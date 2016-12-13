@@ -3,6 +3,8 @@ import Foundation
 
 open class DispatcherQueue {
 
+  private static let Label = "com.mobilenatives.dispatcher"
+  
   // MARK: Public
   
   open let isConcurrent: Bool
@@ -57,9 +59,9 @@ open class DispatcherQueue {
     
     // https://bugs.swift.org/browse/SR-1859
     if #available(iOS 10.0, *) {
-      dispatch_queue = DispatchQueue(label: "", attributes: isConcurrent ? [DispatchQueue.Attributes.concurrent, DispatchQueue.Attributes.initiallyInactive] : [DispatchQueue.Attributes.initiallyInactive])
+      dispatch_queue = DispatchQueue(label: DispatcherQueue.Label, attributes: isConcurrent ? [DispatchQueue.Attributes.concurrent, DispatchQueue.Attributes.initiallyInactive] : [DispatchQueue.Attributes.initiallyInactive])
     } else {
-      dispatch_queue = DispatchQueue(label: "", attributes: isConcurrent ? [DispatchQueue.Attributes.concurrent] : [])
+      dispatch_queue = isConcurrent ? DispatchQueue(label: DispatcherQueue.Label, attributes: [DispatchQueue.Attributes.concurrent]) : DispatchQueue(label: DispatcherQueue.Label)
     }
     remember()
   }
