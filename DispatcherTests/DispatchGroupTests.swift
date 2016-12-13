@@ -5,7 +5,7 @@ import Dispatcher
 
 class DispatchGroupTests: XCTestCase {
 
-  var group: DispatchGroup!
+  var group: DispatcherGroup!
 
   override func tearDown() {
     group = nil
@@ -13,9 +13,9 @@ class DispatchGroupTests: XCTestCase {
   }
 
   func testDispatchGroup () {
-    let expectation = expectationWithDescription("")
+    let expectation = self.expectation(description: "")
 
-    group = DispatchGroup()
+    group = DispatcherGroup()
 
     group++
 
@@ -23,13 +23,13 @@ class DispatchGroupTests: XCTestCase {
 
     group--
 
-    waitForExpectationsWithTimeout(1) { XCTAssertNil($0) }
+    waitForExpectations(timeout: 1) { XCTAssertNil($0) }
   }
 
   func testThreadSafety () {
-    let expectation = expectationWithDescription("")
+    let expectation = self.expectation(description: "")
 
-    group = DispatchGroup(2)
+    group = DispatcherGroup(2)
 
     gcd.async {
       self.group--
@@ -40,6 +40,6 @@ class DispatchGroupTests: XCTestCase {
 
     group.done(expectation.fulfill)
 
-    waitForExpectationsWithTimeout(1) { XCTAssertNil($0) }
+    waitForExpectations(timeout: 1) { XCTAssertNil($0) }
   }
 }

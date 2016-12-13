@@ -43,10 +43,10 @@ class DispatcherTests: XCTestCase {
   }
 
   func testAsyncInAsync () {
-    let expectation = expectationWithDescription("")
+    let expectation = self.expectation(description: "")
 
     gcd.main.async({gcd.main.async({expectation.fulfill()})})
 
-    waitForExpectationsWithTimeout(1, handler: nil)
+    waitForExpectations(timeout: 1, handler: nil)
   }
 }

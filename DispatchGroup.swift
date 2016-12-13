@@ -2,47 +2,49 @@
 import CoreGraphics
 import Dispatch
 
-public typealias Group = DispatchGroup
-
-public class DispatchGroup {
+open class DispatcherGroup {
 
   public init (_ tasks: Int = 0) {
     for _ in 0..<tasks { ++self }
   }
 
-  public private(set) var tasks = 0
+  open fileprivate(set) var tasks = 0
 
-  public let dispatch_group = dispatch_group_create()
+  open let dispatch_group = DispatchGroup()
   
-  public func done (callback: Void -> Void) {
-    dispatch_group_notify(dispatch_group, gcd.current.dispatch_queue, callback)
+  open func done (_ callback: @escaping (Void) -> Void) {
+    guard let current = gcd.current else {
+      return
+    }
+
+    dispatch_group.notify(queue: current.dispatch_queue, execute: callback)
   }
 
-  public func wait (delay: CGFloat, _ callback: Void -> Void) {
-    dispatch_group_wait(dispatch_group, dispatch_time(DISPATCH_TIME_NOW, Int64(delay * CGFloat(NSEC_PER_SEC))))
+  open func wait (_ delay: CGFloat, _ callback: (Void) -> Void) {
+    let _ = dispatch_group.wait(timeout: DispatchTime.now() + Double(Int64(delay * CGFloat(NSEC_PER_SEC))) / Double(NSEC_PER_SEC))
   }
 
   deinit { assert(tasks == 0, "A DispatchGroup cannot be deallocated when tasks is greater than zero!") }
 }
 
-public prefix func ++ (group: DispatchGroup) {
+public prefix func ++ (group: DispatcherGroup) {
   objc_sync_enter(group)
   group.tasks += 1
-  dispatch_group_enter(group.dispatch_group)
+  group.dispatch_group.enter()
   objc_sync_exit(group)
 }
 
-public prefix func -- (group: DispatchGroup) {
+public prefix func -- (group: DispatcherGroup) {
   objc_sync_enter(group)
   group.tasks -= 1
-  dispatch_group_leave(group.dispatch_group)
+  group.dispatch_group.leave()
   objc_sync_exit(group)
 }
 
-public postfix func ++ (group: DispatchGroup) {
+public postfix func ++ (group: DispatcherGroup) {
   ++group
 }
 
-public postfix func -- (group: DispatchGroup) {
+public postfix func -- (group: DispatcherGroup) {
   --group
 }

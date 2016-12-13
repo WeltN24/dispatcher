@@ -3,27 +3,31 @@ import Dispatch
 
 public let gcd = Dispatcher()
 
-public class Dispatcher : DispatchQueue {
+public class Dispatcher : DispatcherQueue {
 
-  public var current: DispatchQueue {
-    return Unmanaged<DispatchQueue>.fromOpaque(COpaquePointer(dispatch_get_specific(&kCurrentQueue))).takeUnretainedValue()
+  public var current: DispatcherQueue? {
+    guard let unsafeRawPoiner = DispatchQueue.getSpecific(key: kCurrentQueue) else {
+      return nil
+    }
+
+    return Unmanaged<DispatcherQueue>.fromOpaque(unsafeRawPoiner).takeUnretainedValue()
   }
 
-  public let main = DispatchQueue(dispatch_get_main_queue())
+  public let main = DispatcherQueue(queue: DispatchQueue.main)
 
-  public let high = DispatchQueue(DISPATCH_QUEUE_PRIORITY_HIGH)
+  public let high = DispatcherQueue(qos: .userInitiated)
 
-  public let low = DispatchQueue(DISPATCH_QUEUE_PRIORITY_LOW)
+  public let low = DispatcherQueue(qos: .utility)
 
-  public let background = DispatchQueue(DISPATCH_QUEUE_PRIORITY_BACKGROUND)
+  public let background = DispatcherQueue(qos: .background)
 
-  public func serial () -> DispatchQueue {
-    return DispatchQueue(false)
+  public func serial () -> DispatcherQueue {
+    return DispatcherQueue(concurrent: false)
   }
 
-  public func concurrent () -> DispatchQueue {
-    return DispatchQueue(true)
+  public func concurrent () -> DispatcherQueue {
+    return DispatcherQueue(concurrent: true)
   }
 
-  init () { super.init(DISPATCH_QUEUE_PRIORITY_DEFAULT) }
+  init () { super.init(qos: .default) }
 }
