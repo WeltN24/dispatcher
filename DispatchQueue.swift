@@ -17,7 +17,7 @@ open class DispatcherQueue {
     dispatch_queue.async { callback() }
   }
   
-  open func sync (_ callback: (Void) -> Void) {
+  open func sync (_ callback: @escaping (Void) -> Void) {
     if isCurrent { callback(); return } // prevent deadlocks!
     dispatch_queue.sync { callback() }
   }
