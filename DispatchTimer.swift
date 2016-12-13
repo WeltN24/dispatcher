@@ -2,8 +2,6 @@
 import Foundation
 import UIKit
 
-public typealias Timer = DispatcherTimer
-
 open class DispatcherTimer {
 
   public convenience init (_ delay: CGFloat, _ callback: @escaping (Void) -> Void) {
@@ -29,7 +27,7 @@ open class DispatcherTimer {
     }
     
     let delay_ns = delay * CGFloat(NSEC_PER_SEC)
-    let time = DispatchTime.now() + Double(Int64(delay_ns)) / Double(NSEC_PER_SEC)
+    let time = DispatchTime.now() + Double(delay)
 
     let interval = DispatchTimeInterval.nanoseconds(Int(delay_ns))
     let leeway = DispatchTimeInterval.nanoseconds(Int(UInt64(tolerance * CGFloat(NSEC_PER_SEC))))
@@ -93,4 +91,4 @@ open class DispatcherTimer {
   }
 }
 
-var autoReleasedTimers = [ObjectIdentifier:Timer]()
+var autoReleasedTimers = [ObjectIdentifier:DispatcherTimer]()

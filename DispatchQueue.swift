@@ -1,8 +1,6 @@
 
 import Foundation
 
-public typealias Queue = DispatcherQueue
-
 open class DispatcherQueue {
 
   // MARK: Public
@@ -14,47 +12,47 @@ open class DispatcherQueue {
   }
 
   open func async (_ callback: @escaping (Void) -> Void) {
-    dispatch_queue.async { callback() }
+    dispatch_queue.async(execute: callback)
   }
   
-  open func sync (_ callback: @escaping (Void) -> Void) {
+  open func sync (_ callback: (Void) -> Void) {
     if isCurrent { callback(); return } // prevent deadlocks!
-    dispatch_queue.sync { callback() }
+    dispatch_queue.sync(execute: callback)
   }
 
   open func async <T> (_ callback: @escaping (T) -> Void) -> (T) -> Void {
     return { [weak self] value in
-      if self == nil { return }
-      self!.async { callback(value) }
+      guard let strongSelf = self else { return }
+      strongSelf.async { callback(value) }
     }
   }
 
   open func sync <T> (_ callback: @escaping (T) -> Void) -> (T) -> Void {
     return { [weak self] value in
-      if self == nil { return }
-      self!.sync { callback(value) }
+      guard let strongSelf = self else { return }
+      strongSelf.sync { callback(value) }
     }
   }
 
-  open let dispatch_queue: Dispatch.DispatchQueue
+  open let dispatch_queue: DispatchQueue
 
 
 
   // MARK: Internal
 
-  init (_ queue: Dispatch.DispatchQueue) {
+  init (queue: DispatchQueue) {
     isConcurrent = false
     dispatch_queue = queue
     remember()
   }
 
-  init (_ qos: DispatchQoS.QoSClass) {
+  init (qos: DispatchQoS.QoSClass) {
     isConcurrent = true
     dispatch_queue = DispatchQueue.global(qos: qos)
     remember()
   }
   
-  init (_ concurrent: Bool) {
+  init (concurrent: Bool) {
     isConcurrent = concurrent
     
     // https://bugs.swift.org/browse/SR-1859
@@ -67,11 +65,11 @@ open class DispatcherQueue {
   }
 
   func remember () {
-    guard let mutablePoiner = getMutablePointer(self) else {
+    guard let mutablePointer = getMutablePointer(self) else {
       return
     }
     
-    dispatch_queue.setSpecific(key: kCurrentQueue, value: mutablePoiner)
+    dispatch_queue.setSpecific(key: kCurrentQueue, value: mutablePointer)
   }
 }
 

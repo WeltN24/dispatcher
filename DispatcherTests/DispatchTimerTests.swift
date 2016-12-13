@@ -102,7 +102,7 @@ class DispatchTimerTests: XCTestCase {
     let expectation = self.expectation(description: "")
 
     gcd.async {
-      self.timer = Timer(0.5, gcd.main.sync({expectation.fulfill()}))
+      self.timer = DispatcherTimer(0.5, gcd.main.sync({expectation.fulfill()}))
     }
 
     waitForExpectations(timeout: 1, handler: nil)

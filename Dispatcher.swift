@@ -13,21 +13,21 @@ public class Dispatcher : DispatcherQueue {
     return Unmanaged<DispatcherQueue>.fromOpaque(unsafeRawPoiner).takeUnretainedValue()
   }
 
-  public let main = DispatcherQueue(DispatchQueue.main)
+  public let main = DispatcherQueue(queue: DispatchQueue.main)
 
-  public let high = DispatcherQueue(.userInitiated)
+  public let high = DispatcherQueue(qos: .userInitiated)
 
-  public let low = DispatcherQueue(.utility)
+  public let low = DispatcherQueue(qos: .utility)
 
-  public let background = DispatcherQueue(.background)
+  public let background = DispatcherQueue(qos: .background)
 
   public func serial () -> DispatcherQueue {
-    return DispatcherQueue(false)
+    return DispatcherQueue(concurrent: false)
   }
 
   public func concurrent () -> DispatcherQueue {
-    return DispatcherQueue(true)
+    return DispatcherQueue(concurrent: true)
   }
 
-  init () { super.init(.default) }
+  init () { super.init(qos: .default) }
 }

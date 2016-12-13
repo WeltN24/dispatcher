@@ -2,8 +2,6 @@
 import CoreGraphics
 import Dispatch
 
-public typealias Group = DispatcherGroup
-
 open class DispatcherGroup {
 
   public init (_ tasks: Int = 0) {
