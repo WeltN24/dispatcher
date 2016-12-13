@@ -5,7 +5,7 @@ import Dispatcher
 
 class DispatchTimerTests: XCTestCase {
 
-  var timer: DispatchTimer!
+  var timer: DispatcherTimer!
   var calls = 0
   var view: UIView!
 
@@ -16,29 +16,29 @@ class DispatchTimerTests: XCTestCase {
   }
 
   func testDispatchTimer () {
-    let expectation = expectationWithDescription("")
+    let expectation = self.expectation(description: "")
 
-    timer = DispatchTimer(1, expectation.fulfill)
+    timer = DispatcherTimer(1, expectation.fulfill)
 
-    waitForExpectationsWithTimeout(1.1, handler: nil)
+    waitForExpectations(timeout: 1.1, handler: nil)
   }
 
   func testCallbackQueue () {
-    let e = expectationWithDescription("")
+    let e = expectation(description: "")
     
     gcd.async {
-      self.timer = DispatchTimer(0.1) {
+      self.timer = DispatcherTimer(0.1) {
         XCTAssert(gcd.isCurrent)
         e.fulfill()
       }
     }
 
-    waitForExpectationsWithTimeout(0.3, handler: nil)
+    waitForExpectations(timeout: 0.3, handler: nil)
   }
 
   func testFire () {
   
-    timer = DispatchTimer(1, {self.calls += 1})
+    timer = DispatcherTimer(1, {self.calls += 1})
 
     timer.fire()
 
@@ -48,9 +48,9 @@ class DispatchTimerTests: XCTestCase {
   }
 
   func testFiniteRepeatingTimer () {
-    let expectation = expectationWithDescription("")
+    let expectation = self.expectation(description: "")
 
-    timer = DispatchTimer(0.25) {
+    timer = DispatcherTimer(0.25) {
       self.calls += 1
       if self.calls == 2 {
         expectation.fulfill()
@@ -59,13 +59,13 @@ class DispatchTimerTests: XCTestCase {
 
     timer.doRepeat(2)
 
-    waitForExpectationsWithTimeout(1, handler: nil)
+    waitForExpectations(timeout: 1, handler: nil)
   }
 
   func testInfiniteRepeatingTimer () {
-    let expectation = expectationWithDescription("")
+    let expectation = self.expectation(description: "")
 
-    timer = DispatchTimer(0.1) {
+    timer = DispatcherTimer(0.1) {
       self.calls += 1
       if self.calls == 5 {
         expectation.fulfill()
@@ -74,37 +74,37 @@ class DispatchTimerTests: XCTestCase {
 
     timer.doRepeat()
 
-    waitForExpectationsWithTimeout(1, handler: nil)
+    waitForExpectations(timeout: 1, handler: nil)
   }
 
   func testAutoClosureTimer () {
-    let expectation = expectationWithDescription("")
+    let expectation = self.expectation(description: "")
 
-    timer = DispatchTimer(0.1, {expectation.fulfill()})
+    timer = DispatcherTimer(0.1, {expectation.fulfill()})
 
-    waitForExpectationsWithTimeout(1, handler: nil)
+    waitForExpectations(timeout: 1, handler: nil)
   }
 
   func testAutoReleasedTimer () {
-    let expectation = expectationWithDescription("")
+    let expectation = self.expectation(description: "")
 
-    DispatchTimer(0.5, {expectation.fulfill()}).autorelease()
+    DispatcherTimer(0.5, {expectation.fulfill()}).autorelease()
 
-    waitForExpectationsWithTimeout(1, handler: nil)
+    waitForExpectations(timeout: 1, handler: nil)
   }
 
   func testUnretainedTimer () {
-    let _ = DispatchTimer(0.1, {self.calls += 1})
-    timer = DispatchTimer(0.2, {XCTAssert(self.calls == 0)})
+    let _ = DispatcherTimer(0.1, {self.calls += 1})
+    timer = DispatcherTimer(0.2, {XCTAssert(self.calls == 0)})
   }
 
   func testThreadSafety () {
-    let expectation = expectationWithDescription("")
+    let expectation = self.expectation(description: "")
 
     gcd.async {
       self.timer = Timer(0.5, gcd.main.sync({expectation.fulfill()}))
     }
 
-    waitForExpectationsWithTimeout(1, handler: nil)
+    waitForExpectations(timeout: 1, handler: nil)
   }
 }

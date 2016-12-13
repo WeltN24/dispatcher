@@ -2,15 +2,15 @@
 import Foundation
 import UIKit
 
-public typealias Timer = DispatchTimer
+public typealias Timer = DispatcherTimer
 
-public class DispatchTimer {
+open class DispatcherTimer {
 
-  public convenience init (_ delay: CGFloat, _ callback: Void -> Void) {
+  public convenience init (_ delay: CGFloat, _ callback: @escaping (Void) -> Void) {
     self.init(delay, 0, callback)
   }
 
-  public init (_ delay: CGFloat, _ tolerance: CGFloat, _ callback: Void -> Void) {
+  public init (_ delay: CGFloat, _ tolerance: CGFloat, _ callback: @escaping (Void) -> Void) {
     self.callback = callback
     self.tolerance = tolerance
 
@@ -20,57 +20,65 @@ public class DispatchTimer {
     }
 
     self.callbackQueue = gcd.current
-    self.timer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, queue.dispatch_queue)
+    self.timer = DispatchSource.makeTimerSource(flags: DispatchSource.TimerFlags(rawValue: 0), queue: queue.dispatch_queue)
     
-    if !gcd.main.isCurrent { dispatch_set_target_queue(queue.dispatch_queue, gcd.current.dispatch_queue) }
+    if !gcd.main.isCurrent {
+      if let dispatch_queue = gcd.current?.dispatch_queue {
+        queue.dispatch_queue.setTarget(queue: dispatch_queue)
+      }
+    }
     
     let delay_ns = delay * CGFloat(NSEC_PER_SEC)
-    let time = dispatch_time(DISPATCH_TIME_NOW, Int64(delay_ns))
-    dispatch_source_set_timer(timer, time, UInt64(delay_ns), UInt64(tolerance * CGFloat(NSEC_PER_SEC)))
-    dispatch_source_set_event_handler(timer) { [weak self] in let _ = self?.fire() }
-    dispatch_resume(timer)
+    let time = DispatchTime.now() + Double(Int64(delay_ns)) / Double(NSEC_PER_SEC)
+
+    let interval = DispatchTimeInterval.nanoseconds(Int(delay_ns))
+    let leeway = DispatchTimeInterval.nanoseconds(Int(UInt64(tolerance * CGFloat(NSEC_PER_SEC))))
+
+    timer?.scheduleRepeating(deadline: time, interval: interval, leeway: leeway)
+    timer?.setEventHandler { [weak self] in let _ = self?.fire() }
+    timer?.resume()
   }
 
   // MARK: Read-only
 
-  public let tolerance: CGFloat
+  open let tolerance: CGFloat
   
-  public let callback: Void -> Void
+  open let callback: (Void) -> Void
 
   // MARK: Instance methods
 
-  public func doRepeat (times: UInt! = nil) {
+  open func doRepeat (_ times: UInt! = nil) {
     isRepeating = true
     repeatsLeft = times != nil ? Int(times) : -1
   }
 
-  public func autorelease () {
+  open func autorelease () {
     isAutoReleased = true
     autoReleasedTimers[ObjectIdentifier(self)] = self
   }
   
-  public func fire () {
+  open func fire () {
     if OSAtomicAnd32OrigBarrier(1, &invalidated) == 1 { return }
-    callbackQueue.sync(callback)
+    callbackQueue?.sync(callback)
     if isRepeating && repeatsLeft > 0 {
       repeatsLeft -= 1
     }
     if !isRepeating || repeatsLeft == 0 { stop() }
   }
   
-  public func stop () {
+  open func stop () {
     if OSAtomicTestAndSetBarrier(7, &invalidated) { return }
-    queue.sync({dispatch_source_cancel(self.timer)})
+    queue.sync({self.timer?.cancel()})
     if isAutoReleased { autoReleasedTimers[ObjectIdentifier(self)] = nil }
   }
 
   // MARK: Internal
 
-  var timer: dispatch_source_t!
+  var timer: DispatchSourceTimer?
 
-  let queue: DispatchQueue = gcd.serial()
+  let queue: DispatcherQueue = gcd.serial()
 
-  var callbackQueue: DispatchQueue!
+  var callbackQueue: DispatcherQueue?
 
   var invalidated: UInt32 = 0
 
